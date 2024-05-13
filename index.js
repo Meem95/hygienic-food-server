@@ -49,7 +49,20 @@ async function run() {
       const result = await foodCollection.insertOne(newLocation);
       res.send(result);
     });
-    
+     //my list route
+     app.get("/myFood/:email", async (req, res) => {
+      console.log(req.params.email);
+      const result = await foodCollection.find({ email: req.params.email }).toArray();
+      res.send(result)
+    })
+
+
+    app.get("/food/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCollection.findOne(query);
+      res.send(result);
+    });
     // user related apis
    
     app.get('/user', async (req, res) => {
