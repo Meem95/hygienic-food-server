@@ -63,6 +63,16 @@ async function run() {
       const result = await foodCollection.findOne(query);
       res.send(result);
     });
+
+
+    //delete method
+    app.delete("/food/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("delete from database", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCollection.deleteOne(query);
+      res.send(result);
+    });
     // user related apis
    
     app.get('/user', async (req, res) => {
