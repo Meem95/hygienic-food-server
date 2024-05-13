@@ -31,8 +31,25 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     //await client.connect();
  
-    const userCollection = client.db('travelDB').collection('user');
+    const userCollection = client.db('foodDB').collection('user');
+    const foodCollection = client.db("foodDB").collection("food");
   
+    //Food related routes 
+    //Food get route
+    app.get("/food", async (req, res) => {
+      const cursor = foodCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //post route
+    app.post("/food", async (req, res) => {
+      const newLocation = req.body;
+      console.log(newLocation);
+      const result = await foodCollection.insertOne(newLocation);
+      res.send(result);
+    });
+    
     // user related apis
    
     app.get('/user', async (req, res) => {
