@@ -63,7 +63,33 @@ async function run() {
       const result = await foodCollection.findOne(query);
       res.send(result);
     });
+ //update route
+ app.put("/food/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const options = { upsert: true };
+  const updatedFood = req.body;
 
+  const location = {
+    $set: {
+      
+      food_name: updatedFood.food_name,
+      quantity: updatedFood.quantity,
+      status: updatedFood.status,
+      location: updatedFood.location,
+      image: updatedFood.image,
+      date: updatedFood.date,
+      short_description: updatedFood.short_description,
+    },
+  };
+
+  const result = await foodCollection.updateOne(
+    filter,
+    location,
+    options
+  );
+  res.send(result);
+});
 
     //delete method
     app.delete("/food/:id", async (req, res) => {
