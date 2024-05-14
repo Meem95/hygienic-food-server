@@ -41,18 +41,19 @@ const client = new MongoClient(uri, {
 });
 
 // middlewares
-const logger = async (req, res, next) => {
-  console.log('called:', req.host, req.originalUrl)
-  next();
-}
+// const  = async (req, res, next) => {
+//   console.log('called:', req.host, req.originalUrl)
+//   next();
+// }
 
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log('allah bachao',token)
-  if (!token) {
-      return res.status(401).send({ message: 'unauthorized access' })
-      next();
-  }
+  console.log('allah bachao', token)
+  next();
+  // if (!token) {
+  //     return res.status(401).send({ message: 'unauthorized access' })
+  //     next();
+  // }
   // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
   //     if (err) {
   //         return res.status(401).send({ message: 'unauthorized access' })
@@ -61,7 +62,11 @@ const verifyToken = async (req, res, next) => {
   //     next();
   // })
 }
-
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
 
 
 async function run() {
@@ -71,67 +76,75 @@ async function run() {
 
     const userCollection = client.db('foodDB').collection('user');
     const foodCollection = client.db("foodDB").collection("food");
+    const requestFoodCollection = client.db("foodDB").collection("requestFood");
 
     // user related apis
-    app.post('/jwt',logger, async (req, res) => {
+    app.post('/jwt', async (req, res) => {
       const user = req.body;
       console.log('user for token', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1h'
       });
 
-      res.cookie('token', token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'none'
-        })
+      res.cookie('token', token, cookieOptions)
         .send({
           success: true
         });
     })
+
     //Food related routes 
 
 
     //my list route
-    app.get("/myFood/:email", async (req, res) => {
+    app.get("/myFood/:email", verifyToken, async (req, res) => {
       console.log(req.params.email);
-      console.log("token", req.cookies.token);
+      console.log("token", req.cookies);
 
       const result = await foodCollection.find({
         email: req.params.email
       }).toArray();
       res.send(result)
-
-      // let query = {};
-      // if (req.query?.email) {
-      //     query = { email: req.query.email }
-      // }
-      // const result = await foodCollection.find(query).toArray();
-      // res.send(result);
-
-      
+    })
+    //my req list route
+    app.get("/myReqFood/:email", verifyToken, async (req, res) => {
+      console.log("req token", req.cookies);
+      const query = {
+        req_email: req.params.email
+      }
+      //console.log(query);
+      const result = await foodCollection.find(query).toArray();
+      res.send(result)
     })
 
 
+
+
     //Food get route
-    app.get("/food",logger, async (req, res) => {
+    app.get("/food", async (req, res) => {
       const cursor = foodCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
+    // request food post route
     //post route
-    app.post("/food",logger, async (req, res) => {
+    app.post("/request-food", async (req, res) => {
+      const reqFood = req.body;
+      console.log(reqFood);
+      const result = await requestFoodCollection.insertOne(reqFood);
+      res.send(result);
+    });
+
+
+    //food post route
+    app.post("/food", async (req, res) => {
       const newLocation = req.body;
       console.log(newLocation);
       const result = await foodCollection.insertOne(newLocation);
       res.send(result);
     });
 
-
-
-
-    app.get("/food/:id",logger, async (req, res) => {
+    app.get("/food/:id", async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id)
@@ -140,7 +153,7 @@ async function run() {
       res.send(result);
     });
     //update route
-    app.put("/food/:id", logger,async (req, res) => {
+    app.put("/food/:id", async (req, res) => {
       const id = req.params.id;
       const filter = {
         _id: new ObjectId(id)
@@ -158,8 +171,12 @@ async function run() {
           status: updatedFood.status,
           location: updatedFood.location,
           image: updatedFood.image,
-          date: updatedFood.date,
+          date: updatedFood.ex_date,
           short_description: updatedFood.short_description,
+          req_name: updatedFood.req_name,
+          req_date: updatedFood.req_date,
+          req_userImage: updatedFood.req_userImage,
+          req_email: updatedFood.req_email,
         },
       };
 
@@ -182,8 +199,14 @@ async function run() {
       res.send(result);
     });
 
-
-
+    ///Logout
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out", user);
+      res
+        .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
+    });
 
     app.get('/user', async (req, res) => {
       const cursor = userCollection.find();
