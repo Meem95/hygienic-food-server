@@ -48,7 +48,6 @@ const client = new MongoClient(uri, {
 
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log('allah bachao', token)
   next();
   // if (!token) {
   //     return res.status(401).send({ message: 'unauthorized access' })
@@ -91,6 +90,10 @@ async function run() {
           success: true
         });
     })
+
+
+    //
+
 
     //Food related routes 
 
@@ -165,7 +168,6 @@ async function run() {
 
       const food = {
         $set: {
-
           food_name: updatedFood.food_name,
           quantity: updatedFood.quantity,
           status: updatedFood.status,
