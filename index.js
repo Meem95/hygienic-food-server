@@ -14,9 +14,9 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(cors({
   origin: [
-    'http://localhost:5173',
-    // 'https://cars-doctor-6c129.web.app',
-    // 'https://cars-doctor-6c129.firebaseapp.com'
+     'http://localhost:5175',
+     'https://h-food-396f7.web.app',
+    'https://h-food-396f7.firebaseapp.com'
   ],
   credentials: true
 }));
@@ -40,11 +40,6 @@ const client = new MongoClient(uri, {
   },
 });
 
-// middlewares
-// const  = async (req, res, next) => {
-//   console.log('called:', req.host, req.originalUrl)
-//   next();
-// }
 
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
@@ -91,13 +86,7 @@ async function run() {
         });
     })
 
-
-    //
-
-
     //Food related routes 
-
-
     //my list route
     app.get("/myFood/:email", verifyToken, async (req, res) => {
       console.log(req.params.email);
